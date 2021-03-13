@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config"
@@ -73,7 +74,7 @@ func (ipp *InProcessCollector) start() error {
 			// Version:  version.Version,
 			// GitHash:  version.GitHash,
 		},
-		ConfigFactory: func(v *viper.Viper, factories component.Factories) (*configmodels.Config, error) {
+		ConfigFactory: func(_ *viper.Viper, _ *cobra.Command, _ component.Factories) (*configmodels.Config, error) {
 			return ipp.config, nil
 		},
 		Factories: ipp.factories,
@@ -110,7 +111,7 @@ func (ipp *InProcessCollector) start() error {
 func (ipp *InProcessCollector) stop() (stopped bool, err error) {
 	if !ipp.stopped {
 		ipp.stopped = true
-		ipp.svc.SignalTestComplete()
+		ipp.svc.Shutdown()
 	}
 	<-ipp.appDone
 	stopped = ipp.stopped

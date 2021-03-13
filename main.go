@@ -9,8 +9,9 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter"
+	"github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter"
 	"github.com/open-telemetry/opentelemetry-lambda-extension/extension"
-
 	"go.opentelemetry.io/collector/service/defaultcomponents"
 )
 
@@ -22,9 +23,19 @@ var (
 
 func main() {
 	factories, _ := defaultcomponents.Components()
+	xrayFactory := awsxrayexporter.NewFactory()
+	emfFactory := awsemfexporter.NewFactory()
+	factories.Exporters[xrayFactory.Type()] = xrayFactory
+	factories.Exporters[emfFactory.Type()] = emfFactory
 	collector := NewInProcessCollector(factories)
-	collector.prepareConfig()
-	collector.start()
+	err := collector.prepareConfig()
+	if err != nil {
+		panic(err)
+	}
+	err = collector.start()
+	if err != nil {
+		panic(err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 
